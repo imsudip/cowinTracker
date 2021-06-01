@@ -8,6 +8,7 @@ class CowinService {
       int id, String date) async {
     String url =
         'https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=$id&date=$date';
+    print(url);
     var response = await http.get(Uri.parse(url));
     final centresResponse = centresResponseFromJson(response.body);
     return centresResponse.centers;
