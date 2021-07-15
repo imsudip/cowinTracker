@@ -36,6 +36,7 @@ class District {
   District({
     this.districtId,
     this.districtName,
+    String value,
   });
 
   int districtId;

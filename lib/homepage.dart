@@ -11,15 +11,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int selectedState, selectedDistrict;
+  int selectedState, selectedDisID;
+  String selectedDistrict;
+  double height, width;
 
   Future<List<District>> districts;
+
   fetchDistricts(int id) {
     districts = CowinService.getAllDistricts(id);
   }
 
   @override
   Widget build(BuildContext context) {
+    height = MediaQuery.of(context).size.height;
+    width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -69,7 +74,7 @@ class _HomePageState extends State<HomePage> {
                   onChanged: (int value) {
                     setState(() {
                       selectedState = value;
-                      selectedDistrict = null;
+                      selectedDisID = null;
                     });
                     fetchDistricts(value);
                     print(value);
@@ -85,6 +90,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   var list = snapshot.data;
+
                   return Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
@@ -109,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                           'Select District',
                           style: GoogleFonts.openSans(fontSize: 16),
                         ),
-                        value: selectedDistrict,
+                        value: selectedDisID,
                         isExpanded: true,
                         items: list
                             .map(
@@ -120,10 +126,17 @@ class _HomePageState extends State<HomePage> {
                             )
                             .toList(),
                         onChanged: (int value) {
+                          print(list.length);
+
+                          print(selectedDisID);
                           setState(() {
-                            selectedDistrict = value;
-                            print(selectedDistrict);
+                            selectedDisID = value;
                           });
+                          selectedDistrict = list
+                              .firstWhere((element) =>
+                                  element.districtId == selectedDisID)
+                              .districtName;
+                          print(selectedDistrict);
                         },
                       ),
                     ),
@@ -212,8 +225,8 @@ class _HomePageState extends State<HomePage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CentreList(
-                      districtId: selectedDistrict,
-                    ),
+                        districtId: selectedDisID,
+                        districtName: selectedDistrict),
                   ),
                 );
               },

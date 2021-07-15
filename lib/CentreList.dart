@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cowin/centreDetails.dart';
 import 'package:cowin/cowinServices.dart';
 import 'package:cowin/homepage.dart';
 import 'package:flutter/material.dart';
@@ -10,18 +11,22 @@ import 'models/centres.dart';
 
 class CentreList extends StatefulWidget {
   final int districtId;
-  CentreList({this.districtId});
+  final String districtName;
+
+  CentreList({@required this.districtId, @required this.districtName});
 
   @override
   _CentreListState createState() => _CentreListState();
 }
 
 class _CentreListState extends State<CentreList> {
+  double height, width;
+  int selectedCentreId;
   currentDate() {
     return formatDate(DateTime.now(), ['dd', '-', 'mm', '-', 'yyyy']);
   }
 
-  Future<List<Centre>> centres;
+  Future<List<Session>> centres;
   fetchCentre(int id, String date) {
     centres = CowinService.getAllCentresFromDistrict(id, date);
   }
@@ -34,18 +39,26 @@ class _CentreListState extends State<CentreList> {
 
   @override
   Widget build(BuildContext context) {
+    height = MediaQuery.of(context).size.height;
+    width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: true,
           backgroundColor: borderColor,
+          title: Text(
+            widget.districtName,
+            style:
+                GoogleFonts.notoSans(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
         ),
         backgroundColor: Color(0xfff0f0f0),
-        body: FutureBuilder<List<Centre>>(
+        body: FutureBuilder<List<Session>>(
           future: centres,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               if (snapshot.data != null) {
-                List<Centre> centreList = snapshot.data;
+                List<Session> centreList = snapshot.data;
                 return ListView.builder(
                   itemCount: centreList.length,
                   itemBuilder: (BuildContext context, int index) {
@@ -53,10 +66,10 @@ class _CentreListState extends State<CentreList> {
                       return centreList[index].feeType == 'Free';
                     }
 
-                    var todaySession = centreList[index]
-                        .sessions
-                        .takeWhile((value) => value.date == currentDate())
-                        .toList();
+                    // var todaySession = centreList[index]
+                    //     .session
+                    //     .takeWhile((value) => value.date == currentDate())
+                    //     .toList();
                     return Card(
                       semanticContainer: false,
                       borderOnForeground: false,
@@ -66,7 +79,19 @@ class _CentreListState extends State<CentreList> {
                           borderRadius: BorderRadius.circular(10)),
                       margin: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
                       child: ListTile(
-                        onTap: () {},
+                        onTap: () {
+                          selectedCentreId = centreList[index].centerId;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CentreDetails(
+                                currentCentreDetails: centreList.firstWhere(
+                                    (element) =>
+                                        element.centerId == selectedCentreId),
+                              ),
+                            ),
+                          );
+                          print(selectedCentreId);
+                        },
                         trailing: Icon(Icons.chevron_right),
                         leading: CircleAvatar(
                           backgroundColor: Colors.blue[900].withOpacity(0.1),
@@ -96,23 +121,18 @@ class _CentreListState extends State<CentreList> {
                               children: [
                                 buildChip(fees() ? Colors.green : Colors.orange,
                                     centreList[index].feeType),
-                                todaySession
-                                            .reduce((e1, e2) => Session(
-                                                availableCapacity:
-                                                    e1.minAgeLimit +
-                                                        e2.minAgeLimit))
+                                centreList[index]
+                                            // .((e1, e2) => Session(
+                                            //       availableCapacity:
+                                            //           e1.minAgeLimit +
+                                            //               e2.minAgeLimit))
                                             .availableCapacity >
                                         0
                                     ? buildChip(Colors.lightGreen, "Available")
                                     : buildChip(Colors.redAccent, "Booked"),
                                 buildChip(
                                     Colors.lightBlue,
-                                    todaySession
-                                            .reduce((e1, e2) => Session(
-                                                minAgeLimit: min(e1.minAgeLimit,
-                                                    e2.minAgeLimit)))
-                                            .minAgeLimit
-                                            .toString() +
+                                    centreList[index].minAgeLimit.toString() +
                                         '+'),
                               ],
                             )
